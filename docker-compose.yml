@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tg_voice_transcriber
+    restart: always
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+      WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
+      TMP_DIR: /tmp/tg-voice-transcriber
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+
+volumes:
+  whisper_models:
