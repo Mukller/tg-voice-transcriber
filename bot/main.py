@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+from bot.commands import register_commands
 from bot.config import config
 from bot.handlers import register_handlers
 from bot.transcriber import transcriber
@@ -17,6 +18,7 @@ async def main() -> None:
     bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
+    register_commands(dp)
     register_handlers(dp)
     transcriber.start()
 

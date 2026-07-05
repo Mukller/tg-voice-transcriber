@@ -54,16 +54,16 @@ class Transcriber:
             finally:
                 self._queue.task_done()
 
-    def _transcribe_sync(self, audio_path: Path) -> str:
+    def _transcribe_sync(self, audio_path: Path) -> list[str]:
         model = self._load_model()
         segments, _info = model.transcribe(
             str(audio_path),
             language=config.WHISPER_LANGUAGE,
             vad_filter=True,
         )
-        return " ".join(segment.text.strip() for segment in segments).strip()
+        return [segment.text.strip() for segment in segments if segment.text.strip()]
 
-    async def transcribe(self, audio_path: Path) -> str:
+    async def transcribe(self, audio_path: Path) -> list[str]:
         future: asyncio.Future = asyncio.get_running_loop().create_future()
         await self._queue.put(TranscriptionJob(audio_path=audio_path, future=future))
         return await future
