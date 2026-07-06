@@ -18,12 +18,6 @@ DOWNLOAD_RETRIES = 3
 DOWNLOAD_RETRY_DELAY_SECONDS = 2
 
 
-def _estimate_seconds(duration: int) -> int:
-    factor = config.WHISPER_RTF_ESTIMATES.get(config.WHISPER_MODEL, 0.5)
-    queued_ahead = transcriber.pending_jobs
-    return max(1, round(duration * factor)) + queued_ahead * 5
-
-
 async def _download_with_retry(bot: Bot, file_id: str, destination: Path) -> None:
     last_error: Exception | None = None
     for attempt in range(1, DOWNLOAD_RETRIES + 1):
@@ -50,7 +44,7 @@ async def handle_media(message: Message, bot: Bot) -> None:
     raw_path = tmp_dir / f"{job_id}.raw"
     wav_path = tmp_dir / f"{job_id}.wav"
 
-    eta = _estimate_seconds(media.duration)
+    eta = transcriber.estimate_seconds(media.duration)
     status_msg = await message.reply(f"🎙 Распознаю... (ориентировочно ~{eta} сек)")
 
     try:
