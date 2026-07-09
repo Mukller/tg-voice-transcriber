@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 
 from bot.config import config
-from bot.text_utils import format_transcript, split_message
+from bot.text_utils import format_transcript, split_transcript_messages
 from bot.transcriber import extract_audio, transcriber
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ async def handle_media(message: Message, bot: Bot) -> None:
             await status_msg.edit_text("⚠️ Не удалось распознать речь в сообщении.")
             return
 
-        chunks = split_message(text)
+        chunks = split_transcript_messages(text)
         await status_msg.edit_text(chunks[0])
         for chunk in chunks[1:]:
             await message.answer(chunk)

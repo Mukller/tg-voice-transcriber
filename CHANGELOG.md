@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Basic punctuation post-processing (capitalize sentence starts, add trailing period)
 - Retry with backoff when downloading media from Telegram fails
 - Log rotation (`json-file`, 10m x 3) in docker-compose
+- Transcripts now prefixed with 💬
+- Deployed model switched to `medium` (CPU-only server, no GPU) for better accuracy
 
 ## [1.0.0] - 2026-07-04
 

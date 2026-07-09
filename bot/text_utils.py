@@ -1,5 +1,6 @@
 TELEGRAM_MESSAGE_LIMIT = 4096
 SENTENCE_END = (".", "!", "?", "…")
+TRANSCRIPT_PREFIX = "💬 "
 
 
 def format_segment(text: str) -> str:
@@ -34,3 +35,10 @@ def split_message(text: str, limit: int = TELEGRAM_MESSAGE_LIMIT) -> list[str]:
     if remaining:
         chunks.append(remaining)
     return chunks
+
+
+def split_transcript_messages(text: str) -> list[str]:
+    """Split a transcript into Telegram-ready messages, each prefixed with
+    TRANSCRIPT_PREFIX (accounting for the prefix length in the size limit)."""
+    limit = TELEGRAM_MESSAGE_LIMIT - len(TRANSCRIPT_PREFIX)
+    return [TRANSCRIPT_PREFIX + chunk for chunk in split_message(text, limit)]
