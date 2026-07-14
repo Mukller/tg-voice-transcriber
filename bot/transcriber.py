@@ -118,11 +118,14 @@ class Transcriber:
 
 
 def extract_audio(input_path: Path, output_path: Path) -> None:
-    """Extract/convert media to 16kHz mono WAV via ffmpeg (needed for video notes)."""
+    """Extract/convert media to 16kHz mono WAV via ffmpeg (needed for video notes),
+    normalizing loudness so quiet voice messages transcribe as well as loud ones.
+    This only affects the copy fed to Whisper — nothing is sent back to the user."""
     result = subprocess.run(
         [
             "ffmpeg", "-y", "-i", str(input_path),
             "-ar", "16000", "-ac", "1",
+            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
             "-f", "wav", str(output_path),
         ],
         capture_output=True,

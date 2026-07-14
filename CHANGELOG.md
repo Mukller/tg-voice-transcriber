@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Transcripts now prefixed with 💬
 - Deployed model switched to `medium` (CPU-only server, no GPU) for better accuracy
+- Loudness normalization before transcription (ffmpeg `loudnorm`) so quiet voice messages recognize as well as loud ones — applied only to the copy fed to Whisper, not sent anywhere
 
 ## [1.1.0] - 2026-07-07
 
