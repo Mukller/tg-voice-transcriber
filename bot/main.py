@@ -1,7 +1,5 @@
 import asyncio
-import contextlib
 import logging
-import signal
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher
@@ -35,31 +33,22 @@ async def main() -> None:
     register_handlers(dp)
     transcriber.start()
 
-    stop_event = asyncio.Event()
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, stop_event.set)
-
     heartbeat_task = asyncio.create_task(_heartbeat_loop())
-    polling_task = asyncio.create_task(dp.start_polling(bot))
 
     logger.info("Bot starting (whisper model=%s)", config.WHISPER_MODEL)
-    await stop_event.wait()
-
-    logger.info("Shutdown signal received, stopping polling and waiting for in-flight transcription...")
-    heartbeat_task.cancel()
-    await dp.stop_polling()
-    polling_task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await polling_task
-
     try:
-        await asyncio.wait_for(transcriber.wait_idle(), timeout=config.SHUTDOWN_DRAIN_TIMEOUT_SECONDS)
-    except asyncio.TimeoutError:
-        logger.warning("Timed out waiting for the transcription queue to drain")
-
-    await bot.session.close()
-    logger.info("Shutdown complete")
+        # aiogram installs its own SIGINT/SIGTERM handlers here and returns
+        # once polling stops gracefully — no need to manage signals ourselves.
+        await dp.start_polling(bot)
+    finally:
+        heartbeat_task.cancel()
+        logger.info("Polling stopped, waiting for in-flight transcription to finish...")
+        try:
+            await asyncio.wait_for(transcriber.wait_idle(), timeout=config.SHUTDOWN_DRAIN_TIMEOUT_SECONDS)
+        except asyncio.TimeoutError:
+            logger.warning("Timed out waiting for the transcription queue to drain")
+        await bot.session.close()
+        logger.info("Shutdown complete")
 
 
 if __name__ == "__main__":
