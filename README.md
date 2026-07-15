@@ -40,6 +40,7 @@ docker compose up -d --build
 | `WHISPER_DEVICE` | `cpu` | `cpu` или `cuda` |
 | `WHISPER_COMPUTE_TYPE` | `int8` | Тип вычислений (`int8`, `float16`, `float32`) |
 | `WHISPER_LANGUAGE` | (авто) | Код языка (`ru`, `en`, ...); пусто — автоопределение |
+| `WHISPER_INITIAL_PROMPT` | (пусто) | Подсказка модели: имена, термины, специфичные слова — поднимает точность на бытовой речи |
 
 ## Важно для групп
 

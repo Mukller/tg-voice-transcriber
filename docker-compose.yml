@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: tg_voice_transcriber
     restart: always
+    stop_grace_period: 100s
     logging:
       driver: json-file
       options:
@@ -18,7 +19,15 @@ services:
       WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
       WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
       WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
+      WHISPER_INITIAL_PROMPT: ${WHISPER_INITIAL_PROMPT:-}
       TMP_DIR: /tmp/tg-voice-transcriber
+      HEARTBEAT_FILE: /tmp/tg-voice-transcriber/.heartbeat
+    healthcheck:
+      test: ["CMD-SHELL", "test $(( $(date +%s) - $(stat -c %Y /tmp/tg-voice-transcriber/.heartbeat 2>/dev/null || echo 0) )) -lt 60"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     volumes:
       - whisper_models:/root/.cache/huggingface
 

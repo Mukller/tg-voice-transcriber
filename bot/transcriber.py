@@ -75,6 +75,7 @@ class Transcriber:
         segments, info = model.transcribe(
             str(audio_path),
             language=config.WHISPER_LANGUAGE,
+            initial_prompt=config.WHISPER_INITIAL_PROMPT,
             vad_filter=True,
         )
         texts = [segment.text.strip() for segment in segments if segment.text.strip()]
@@ -116,16 +117,31 @@ class Transcriber:
     def pending_jobs(self) -> int:
         return self._queue.qsize()
 
+    async def wait_idle(self) -> None:
+        """Wait until the queue is empty and any in-flight job has finished —
+        used on shutdown so an in-progress transcription isn't cut off."""
+        await self._queue.join()
+
+
+AUDIO_FILTERS = (
+    # trim long silence at the start/end (VAD in faster-whisper already handles
+    # gaps in the middle) so we don't waste time decoding dead air, then
+    "silenceremove=start_periods=1:start_silence=0.3:start_threshold=-45dB:"
+    "stop_periods=1:stop_silence=0.3:stop_threshold=-45dB,"
+    # normalize loudness so quiet voice messages transcribe as well as loud ones
+    "loudnorm=I=-16:TP=-1.5:LRA=11"
+)
+
 
 def extract_audio(input_path: Path, output_path: Path) -> None:
     """Extract/convert media to 16kHz mono WAV via ffmpeg (needed for video notes),
-    normalizing loudness so quiet voice messages transcribe as well as loud ones.
+    trimming edge silence and normalizing loudness before Whisper sees it.
     This only affects the copy fed to Whisper — nothing is sent back to the user."""
     result = subprocess.run(
         [
             "ffmpeg", "-y", "-i", str(input_path),
             "-ar", "16000", "-ac", "1",
-            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+            "-af", AUDIO_FILTERS,
             "-f", "wav", str(output_path),
         ],
         capture_output=True,
